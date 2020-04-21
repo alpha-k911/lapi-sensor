@@ -14,6 +14,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.widget.TextView;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -25,11 +28,19 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     MediaPlayer mp;
 
     TextView timer;
+    int lux_value;
 
     private SensorManager sensorManager;
     private Sensor mLight;
     int c = 0;
-    Handler handler;
+    private FirebaseDatabase mFirebaseFirestore;
+    private DatabaseReference mDatabaseReference;
+
+
+
+
+    public MainActivity() {
+    }
 
 
     @Override
@@ -44,20 +55,36 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 
 
 
-//        Timer tmr = new Timer();
-//        tmr.schedule();
-        handler = new Handler();
-        handler.postDelayed(new Runnable() {
+        mFirebaseFirestore = FirebaseDatabase.getInstance();
+        mDatabaseReference = mFirebaseFirestore.getReference().child("lux");
+
+        Timer tmr = new Timer();
+
+
+        tmr.scheduleAtFixedRate(new TimerTask() {
             @Override
             public void run() {
-                //Do something after 100ms
-                System.out.println("$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$");
+                c++;
+                System.out.println(c + " secs");
+                setText(c);
+                Lux l = new Lux(lux_value);
+//                mDatabaseReference.push().setValue(l);
+                mDatabaseReference.setValue(lux_value);
+
             }
-        }, 1000);
+        }, 100, 1000);
+
 
 
     }
-
+    private void setText(final int p){
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                timer.setText(p+" secs");
+            }
+        });
+    }
     @Override
     public void onSensorChanged(SensorEvent event) {
 
@@ -66,9 +93,12 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
 //        System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 //        System.out.println(lux);
         t.setText(String.valueOf(lux));
+        lux_value = Math.round(lux);
 //        System.out.println("^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
 
     }
+
+
 
     @Override
     public void onAccuracyChanged(Sensor sensor, int accuracy) {
@@ -87,6 +117,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     protected void onPause() {
 
         super.onPause();
-        sensorManager.unregisterListener(this);
+//        sensorManager.unregisterListener(this);
     }
 }
